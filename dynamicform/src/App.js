@@ -5,6 +5,7 @@ import './App.css';
 class Field extends Component{
   render(){
     let inputElement;
+    let validateMsg;
     switch (this.props.fieldProps.type) {
       case "textInput": 
           inputElement = (
@@ -14,7 +15,9 @@ class Field extends Component{
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
             pattern={this.props.fieldProps.pattern}
+            placeholder={this.props.fieldProps.placeholder}
             value={this.props.fieldProps.value}
+            style={(this.props.fieldProps.isChanged && !this.props.fieldProps.isValid)?{borderColor:'red'}:{}}
             onChange={event => this.props.changed(event,this.props.fieldProps)}
             />
           );
@@ -30,6 +33,7 @@ class Field extends Component{
         required={this.props.fieldProps.isRequired}
         placeholder={this.props.fieldProps.unitOfMeasure}
         value={this.props.fieldProps.value}
+        style={(this.props.fieldProps.isChanged && !this.props.fieldProps.isValid)?{borderColor:'red'}:{}}
         onChange={event => this.props.changed(event,this.props.fieldProps)}
         />
       );
@@ -38,13 +42,14 @@ class Field extends Component{
       inputElement = (
         <select id={this.props.fieldProps.id}  hidden={!this.props.fieldProps.display} 
                 required={this.props.fieldProps.isRequired} value={this.props.fieldProps.value}
+                style={(this.props.fieldProps.isChanged && !this.props.fieldProps.isValid)?{borderColor:'red'}:{}}
                 onChange={event => this.props.changed(event,this.props.fieldProps)}>
                 {
                     Array.from(this.props.fieldProps.options).sort((a, b) => {
                       return a.sortOrder - b.sortOrder;
                     }).map(option => {
                         return (
-                          <option id={option.id} selected={option.isDefault}>
+                          <option id={option.id}>
                             {option.name}
                           </option>
                         );
@@ -61,6 +66,7 @@ class Field extends Component{
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
             value={this.props.fieldProps.value}
+            style={(this.props.fieldProps.isChanged && !this.props.fieldProps.isValid)?{borderColor:'red'}:{}}
             onChange={event => this.props.changed(event,this.props.fieldProps)}
             />
           );
@@ -78,7 +84,7 @@ class Field extends Component{
 class Form extends Component{
   constructor(props) {
     super(props);
-    const formDataState=this.props.formData.dataElements.map(o=>({...o,isValid:this.checkValidity(o)}));
+    const formDataState=this.props.formData.dataElements.map(o=>({...o,isChanged:false,isValid:this.checkValidity(o)}));
     this.state = {formStates: formDataState,
                   formIsValid: false};
   }
@@ -87,6 +93,9 @@ class Form extends Component{
     const updatedFormStates=this.state.formStates.map(o=>({...o}));
     const updatedFormElement = updatedFormStates.find(obj =>obj.id==el.id);
     updatedFormElement.value = event.target.value;
+    if(!updatedFormElement.isChanged){
+      updatedFormElement.isChanged=true;
+    }
     updatedFormElement.isValid=this.checkValidity(updatedFormElement);
     this.setState({formStates:updatedFormStates});
     let formIsValidNow = true;
@@ -133,7 +142,7 @@ class Form extends Component{
         flag=true;
         return;
       }
-      formData[el.displayName] = el.value;
+      formData[el.displayName] = el.options?el.options.find(obj =>obj.name==el.value).id: el.value;
     }); 
     if(flag){
       formData["BMI"]=this.calcBMI(weight,height);
@@ -149,18 +158,18 @@ class Form extends Component{
   }
   render(){
     return (
-      <div>
+      <div  className="App-form">
         <h2>{this.props.formData.observationName}</h2>
         <form id={this.props.formData.id} method="post">
-          <ul>
           {
             this.state.formStates.map(el => {
               return (
                 <Field fieldProps={el} changed={(e,f)=>this.inputChange(e,f)}/>
               );
             })}
-            </ul>
-            <button onClick={e=>this.formSubmit(e)} disabled={!this.state.formIsValid}>SUBMIT</button>
+            <div>
+              <button onClick={e=>this.formSubmit(e)} disabled={!this.state.formIsValid}>SUBMIT</button>
+            </div>
         </form>
       </div>
     );
@@ -186,24 +195,23 @@ class App extends Component {
           display: true,
           isRequired: true,
           value:"",
+          placeholder:"full name",
           pattern: /^[a-zA-Z]+ [a-zA-Z]+$/
         },
         {
           id: 'gender',
           displayName: 'Gender',
           type: 'select',
-          value:"",
+          value:"Male",
           options: [
             {
               id: 1,
               name: 'Male',
-              isDefault: true,
               sortOrder: 1,
             },
             {
               id: 2,
               name: 'Female',
-              isDefault: false,
               sortOrder: 2,
             },
           ],
@@ -260,24 +268,23 @@ class App extends Component {
           display: true,
           isRequired: true,
           value:"",
+          placeholder:"full name",
           pattern: /^[a-zA-Z]+ [a-zA-Z]+$/
         },
         {
           id: 'gender',
           displayName: 'Gender',
           type: 'select',
-          value:"",
+          value:"Male",
           options: [
             {
               id: 1,
               name: 'Male',
-              isDefault: true,
               sortOrder: 1,
             },
             {
               id: 2,
               name: 'Female',
-              isDefault: false,
               sortOrder: 2,
             },
           ],
@@ -304,17 +311,6 @@ class App extends Component {
       <div className="App">
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
         </header>
         <Form formData={bmiReferenceProps}  postUrl={url} postAction={this.postForm}/>
       </div>
