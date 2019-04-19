@@ -13,6 +13,7 @@ class Field extends Component{
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
             value={this.props.fieldProps.value}
+            onChange={event => this.props.changed(event,this.props.fieldProps)}
             />
           );
            break;
@@ -27,13 +28,15 @@ class Field extends Component{
         required={this.props.fieldProps.isRequired}
         placeholder={this.props.fieldProps.unitOfMeasure}
         value={this.props.fieldProps.value}
+        onChange={event => this.props.changed(event,this.props.fieldProps)}
         />
       );
           break;
       case "select":
       inputElement = (
         <select id={this.props.fieldProps.id}  hidden={!this.props.fieldProps.display} 
-                required={this.props.fieldProps.isRequired} value={this.props.fieldProps.value}>
+                required={this.props.fieldProps.isRequired} value={this.props.fieldProps.value}
+                onChange={event => this.props.changed(event,this.props.fieldProps)}>
                 {
                     Array.from(this.props.fieldProps.options).sort((a, b) => {
                       return a.sortOrder - b.sortOrder;
@@ -56,6 +59,7 @@ class Field extends Component{
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
             value={this.props.fieldProps.value}
+            onChange={event => this.props.changed(event,this.props.fieldProps)}
             />
           );
           break; 
@@ -69,12 +73,23 @@ class Field extends Component{
   }
 }
 class Form extends Component{
+  constructor(props) {
+    super(props);
+    const formDataState=this.props.formData.dataElements.map(o=>({...o}));
+    this.state = {formStates: formDataState};
+  }
+  inputChange(event,el){
+    const updatedFormStates=this.state.formStates.map(o=>({...o}));
+    const updatedFormElement = updatedFormStates.find(obj =>obj.id==el.id);
+    updatedFormElement.value = event.target.value;
+    this.setState({formStates:updatedFormStates});
+  };
   formSubmit(event){
     event.preventDefault();
     const formData = {};
     let weight,height;
     let flag=false;
-    this.props.formData.dataElements.forEach(el => {
+    this.state.formStates.forEach(el => {
       if(el.displayName=="Weight"){
         weight= el.value;
       }
@@ -104,9 +119,9 @@ class Form extends Component{
         <form id={this.props.formData.id} method="post">
           <ul>
           {
-            this.props.formData.dataElements.map(el => {
+            this.state.formStates.map(el => {
               return (
-                <Field fieldProps={el}/>
+                <Field fieldProps={el} changed={(e,f)=>this.inputChange(e,f)}/>
               );
             })}
             </ul>
