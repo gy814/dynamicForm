@@ -9,9 +9,10 @@ class Field extends Component{
           inputElement = (
             <input
             type="text"
-            id={this.props.id}
+            id={this.props.fieldProps.id}
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
+            value={this.props.fieldProps.value}
             />
           );
            break;
@@ -25,13 +26,14 @@ class Field extends Component{
         hidden={!this.props.fieldProps.display}
         required={this.props.fieldProps.isRequired}
         placeholder={this.props.fieldProps.unitOfMeasure}
+        value={this.props.fieldProps.value}
         />
       );
           break;
       case "select":
       inputElement = (
         <select id={this.props.fieldProps.id}  hidden={!this.props.fieldProps.display} 
-                required={this.props.fieldProps.isRequired}>
+                required={this.props.fieldProps.isRequired} value={this.props.fieldProps.value}>
                 {
                     Array.from(this.props.fieldProps.options).sort((a, b) => {
                       return a.sortOrder - b.sortOrder;
@@ -53,6 +55,7 @@ class Field extends Component{
             id={this.props.id}
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
+            value={this.props.fieldProps.value}
             />
           );
           break; 
@@ -66,10 +69,39 @@ class Field extends Component{
   }
 }
 class Form extends Component{
+  formSubmit(event){
+    event.preventDefault();
+    const formData = {};
+    let weight,height;
+    let flag=false;
+    this.props.formData.dataElements.forEach(el => {
+      if(el.displayName=="Weight"){
+        weight= el.value;
+      }
+      if(el.displayName=="Height"){
+        height=el.value;
+      }
+      if(el.displayName=="BMI"){
+        flag=true;
+        return;
+      }
+      formData[el.displayName] = el.value;
+    }); 
+    if(flag){
+      formData["BMI"]=this.calcBMI(weight,height);
+    }
+    this.props.postAction(this.props.postUrl, formData);
+  };
+  calcBMI(w,h){
+    var weight = Number(w);
+    var height = Number(h);
+    var BMI =  weight/(height/100*height/100);
+    return BMI.toFixed(2);
+  }
   render(){
     return (
       <div>
-        <form>
+        <form id={this.props.formData.id} method="post">
           <ul>
           {
             this.props.formData.dataElements.map(el => {
@@ -78,7 +110,7 @@ class Form extends Component{
               );
             })}
             </ul>
-            <button>SUBMIT</button>
+            <button onClick={e=>this.formSubmit(e)}>SUBMIT</button>
         </form>
       </div>
     );
@@ -86,6 +118,10 @@ class Form extends Component{
 }
 
 class App extends Component {
+  postForm(url, data){
+    //Make a post request to the server
+    console.log(`request posted with data:${JSON.stringify(data)}`);
+  }
   render() {
     const bmiReferenceProps = {
       id: 'bmi',
@@ -97,11 +133,13 @@ class App extends Component {
           type: 'textInput',
           display: true,
           isRequired: true,
+          value:""
         },
         {
           id: 'gender',
           displayName: 'Gender',
           type: 'select',
+          value:"",
           options: [
             {
               id: 1,
@@ -129,6 +167,7 @@ class App extends Component {
           },
           display: true,
           isRequired: true,
+          value:"65"
         },
         {
           id: 'height',
@@ -140,6 +179,7 @@ class App extends Component {
           },
           display: true,
           isRequired: true,
+          value:"170"
         },
         {
           id: 'bmi',
@@ -151,6 +191,7 @@ class App extends Component {
           },
           display: false,
           isRequired: false,
+          value:""
         },
       ],
     };
@@ -165,11 +206,13 @@ class App extends Component {
           type: 'textInput',
           display: true,
           isRequired: true,
+          value:""
         },
         {
           id: 'gender',
           displayName: 'Gender',
           type: 'select',
+          value:"",
           options: [
             {
               id: 1,
@@ -197,10 +240,11 @@ class App extends Component {
           },
           display: true,
           isRequired: true,
+          value:""
         },
       ],
     };
-    
+    const url="#";
     return (
       <div className="App">
         <header className="App-header">
@@ -217,7 +261,7 @@ class App extends Component {
             Learn React
           </a>
         </header>
-        <Form formData={headCircumferenceReferenceProps}/>
+        <Form formData={bmiReferenceProps}  postUrl={url} postAction={this.postForm}/>
       </div>
     );
   }
