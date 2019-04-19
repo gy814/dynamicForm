@@ -1,12 +1,31 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-
+class Field extends Component{
+  render(){
+    return (
+      <div>
+        <label style={{marginRight:30+"px"}}>{this.props.fieldProps.displayName}</label>
+        <strong>{this.props.fieldProps.type}</strong>
+      </div>
+     );
+  }
+}
 class Form extends Component{
   render(){
     return (
       <div>
-        <form></form>
+        <form>
+          <ul>
+          {
+            this.props.formData.dataElements.map(el => {
+              return (
+                <Field fieldProps={el}/>
+              );
+            })}
+            </ul>
+            <button>SUBMIT</button>
+        </form>
       </div>
     );
   }
