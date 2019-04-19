@@ -1,17 +1,19 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+//Individual form field component
 class Field extends Component{
   render(){
     let inputElement;
     switch (this.props.fieldProps.type) {
-      case "textInput":
+      case "textInput": 
           inputElement = (
             <input
             type="text"
             id={this.props.fieldProps.id}
             hidden={!this.props.fieldProps.display}
             required={this.props.fieldProps.isRequired}
+            pattern={this.props.fieldProps.pattern}
             value={this.props.fieldProps.value}
             onChange={event => this.props.changed(event,this.props.fieldProps)}
             />
@@ -21,7 +23,7 @@ class Field extends Component{
       inputElement = (
         <input
         type="number"
-        min="1"
+        min="0"
         max={this.props.fieldProps.bounds.upperLimit}
         id={this.props.fieldProps.id}
         hidden={!this.props.fieldProps.display}
@@ -66,24 +68,51 @@ class Field extends Component{
     }
     return (
       <div>
-        <label style={{marginRight:30+"px"}}>{this.props.fieldProps.displayName}</label>
+        {this.props.fieldProps.display && <label style={{marginRight:30+"px"}}>{this.props.fieldProps.displayName}</label>}
         {inputElement}
       </div>
      );
   }
 }
+//Form component
 class Form extends Component{
   constructor(props) {
     super(props);
-    const formDataState=this.props.formData.dataElements.map(o=>({...o}));
-    this.state = {formStates: formDataState};
+    const formDataState=this.props.formData.dataElements.map(o=>({...o,isValid:this.checkValidity(o)}));
+    this.state = {formStates: formDataState,
+                  formIsValid: false};
   }
+  //Form input change event handler
   inputChange(event,el){
     const updatedFormStates=this.state.formStates.map(o=>({...o}));
     const updatedFormElement = updatedFormStates.find(obj =>obj.id==el.id);
     updatedFormElement.value = event.target.value;
+    updatedFormElement.isValid=this.checkValidity(updatedFormElement);
     this.setState({formStates:updatedFormStates});
+    let formIsValidNow = true;
+    updatedFormStates.forEach( el=> {
+      formIsValidNow = el.isValid && formIsValidNow;
+    });
+    this.setState({formIsValid:formIsValidNow})
   };
+  //Check input field validity
+  checkValidity(field){
+    let isValid = true;
+    if(!field.display){
+      return isValid;
+    }
+    if (field.isRequired) {
+      isValid = field.value.trim() !== "" && isValid;
+    }
+    if (field.bounds) {
+    isValid = field.value >0 && field.value<=field.bounds.upperLimit && isValid;
+    }
+    if(field.pattern){
+      isValid=field.pattern.test(field.value) && isValid;
+    }
+    return isValid;
+  }
+  //Form submit event handler
   formSubmit(event){
     event.preventDefault();
     const formData = {};
@@ -91,10 +120,14 @@ class Form extends Component{
     let flag=false;
     this.state.formStates.forEach(el => {
       if(el.displayName=="Weight"){
-        weight= el.value;
+        weight= Math.round(el.value);
+        formData[el.displayName] = Math.round(el.value);
+        return;
       }
       if(el.displayName=="Height"){
-        height=el.value;
+        height=Math.round(el.value);
+        formData[el.displayName] = Math.round(el.value);
+        return;
       }
       if(el.displayName=="BMI"){
         flag=true;
@@ -107,6 +140,7 @@ class Form extends Component{
     }
     this.props.postAction(this.props.postUrl, formData);
   };
+  //Calculate BMI given weight and height value
   calcBMI(w,h){
     var weight = Number(w);
     var height = Number(h);
@@ -116,6 +150,7 @@ class Form extends Component{
   render(){
     return (
       <div>
+        <h2>{this.props.formData.observationName}</h2>
         <form id={this.props.formData.id} method="post">
           <ul>
           {
@@ -125,19 +160,21 @@ class Form extends Component{
               );
             })}
             </ul>
-            <button onClick={e=>this.formSubmit(e)}>SUBMIT</button>
+            <button onClick={e=>this.formSubmit(e)} disabled={!this.state.formIsValid}>SUBMIT</button>
         </form>
       </div>
     );
   }
 }
-
+//Root component
 class App extends Component {
+  //Post form data to the server
   postForm(url, data){
     //Make a post request to the server
     console.log(`request posted with data:${JSON.stringify(data)}`);
   }
   render() {
+    //Input form json data
     const bmiReferenceProps = {
       id: 'bmi',
       observationName: 'BMI - Body mass index',
@@ -148,7 +185,8 @@ class App extends Component {
           type: 'textInput',
           display: true,
           isRequired: true,
-          value:""
+          value:"",
+          pattern: /^[a-zA-Z]+ [a-zA-Z]+$/
         },
         {
           id: 'gender',
@@ -221,7 +259,8 @@ class App extends Component {
           type: 'textInput',
           display: true,
           isRequired: true,
-          value:""
+          value:"",
+          pattern: /^[a-zA-Z]+ [a-zA-Z]+$/
         },
         {
           id: 'gender',
@@ -249,6 +288,7 @@ class App extends Component {
           id: 'head-circumference',
           displayName: 'Head Circumference',
           unitOfMeasure: 'cm',
+          step:1,
           type: 'numberInput',
           bounds: {
             upperLimit: 1000,
@@ -259,7 +299,7 @@ class App extends Component {
         },
       ],
     };
-    const url="#";
+    const url="#"; //Form post url
     return (
       <div className="App">
         <header className="App-header">
