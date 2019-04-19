@@ -3,10 +3,64 @@ import logo from './logo.svg';
 import './App.css';
 class Field extends Component{
   render(){
+    let inputElement;
+    switch (this.props.fieldProps.type) {
+      case "textInput":
+          inputElement = (
+            <input
+            type="text"
+            id={this.props.id}
+            hidden={!this.props.fieldProps.display}
+            required={this.props.fieldProps.isRequired}
+            />
+          );
+           break;
+      case "numberInput":
+      inputElement = (
+        <input
+        type="number"
+        min="1"
+        max={this.props.fieldProps.bounds.upperLimit}
+        id={this.props.fieldProps.id}
+        hidden={!this.props.fieldProps.display}
+        required={this.props.fieldProps.isRequired}
+        placeholder={this.props.fieldProps.unitOfMeasure}
+        />
+      );
+          break;
+      case "select":
+      inputElement = (
+        <select id={this.props.fieldProps.id}  hidden={!this.props.fieldProps.display} 
+                required={this.props.fieldProps.isRequired}>
+                {
+                    Array.from(this.props.fieldProps.options).sort((a, b) => {
+                      return a.sortOrder - b.sortOrder;
+                    }).map(option => {
+                        return (
+                          <option id={option.id} selected={option.isDefault}>
+                            {option.name}
+                          </option>
+                        );
+                    })
+                  }
+        </select>
+      )
+          break;
+      default:
+          inputElement = (
+            <input
+            type="text"
+            id={this.props.id}
+            hidden={!this.props.fieldProps.display}
+            required={this.props.fieldProps.isRequired}
+            />
+          );
+          break; 
+    }
     return (
       <div>
         <label style={{marginRight:30+"px"}}>{this.props.fieldProps.displayName}</label>
-        <strong>{this.props.fieldProps.type}</strong>
+        {inputElement}
       </div>
      );
   }
