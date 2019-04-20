@@ -1,3 +1,96 @@
+# 1.	Setup:
+
+  1. git clone to local repository
+  2. run `cd dynamicform` from local respository folder (make sure Node 8.10.0 or later is installed on your computer)
+  3. run `npm install` (takes a while to install all dependencies)
+  3. run `npm start`
+  4. open http://localhost:3000/ in broswer
+  
+  
+# 2.	Input JSON format:
+
+1 form data object (e.g. bmiReferenceProps)
+  - id: form id
+  - observationName: form title
+  - dataElements: array of form field data object
+  
+2 form field data object
+  - shared properties
+    - id: form field id
+    - displayName: form field name
+    - type: form field type (e.g. text input) 
+    - display: whether this field is displayed on screen
+    - isRequired: whether this field should not be leaved empty
+    - value: initial value of form field, could be empty
+
+  - field specific properties
+    - placeholder: used by textInput type to hint about the expected input (e.g. full name)  
+    - pattern: used by textInput type to specify the required format of input
+
+    - options : array of select options object, used by select type
+        - id: id of select option
+        - name: text of select option to be displayed
+        - sortOrder:the order of select option to be displayed
+
+    - unitOfMeasure: used by numberInput type to specify the unit of input value
+    - bounds: value range object used by numberInput type
+        - upperLimit: the maximum value of input allowed
+        
+An example of input JSON data would be like
+
+```
+const headCircumferenceReferenceProps = {
+      id: 'head-circumference',
+      observationName: 'Head Circumference',
+      dataElements: [
+        {
+          id: 'name',
+          displayName: 'Name',
+          type: 'textInput',
+          display: true,
+          isRequired: true,
+          value:"",
+          placeholder:"full name",
+          pattern: /^[a-zA-Z]+ [a-zA-Z]+$/
+        },
+        {
+          id: 'gender',
+          displayName: 'Gender',
+          type: 'select',
+          value:"Male",
+          options: [
+            {
+              id: 1,
+              name: 'Male',
+              sortOrder: 1,
+            },
+            {
+              id: 2,
+              name: 'Female',
+              sortOrder: 2,
+            },
+          ],
+          display: true,
+          isRequired: false,
+        },
+        {
+          id: 'head-circumference',
+          displayName: 'Head Circumference',
+          unitOfMeasure: 'cm',
+          type: 'numberInput',
+          bounds: {
+            upperLimit: 1000,
+          },
+          display: true,
+          isRequired: true,
+          value:""
+        },
+      ],
+    };
+```
+
+# 3.	Project template
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
