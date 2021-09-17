@@ -4,7 +4,7 @@
   2. run `cd dynamicform` from local respository folder (make sure Node 8.10.0 or later is installed on your computer)
   3. run `npm install` (takes a while to install all dependencies)
   3. run `npm start`
-  4. open http://localhost:3000/ in broswer
+  4. open http://localhost:3000/ in broswer.
   
   
 # 2.	Input JSON format:
